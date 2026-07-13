@@ -5,13 +5,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import api_router
 from app.core.config import settings
-from app.services import storage
+from app.services import queue, storage
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     storage.ensure_bucket()
+    await queue.connect()
     yield
+    await queue.disconnect()
 
 
 app = FastAPI(

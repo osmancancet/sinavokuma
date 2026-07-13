@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
+from sinavokuma_shared import Course, MudekOutcome, UserRole
 from sqlalchemy import select
 
 from app.core.deps import CurrentUser, DbSession, get_owned_course, require_role
-from app.models import Course, MudekOutcome, UserRole
 from app.schemas.course import CourseCreate, CourseRead, MudekOutcomeCreate, MudekOutcomeRead
 
 router = APIRouter(prefix="/courses", tags=["courses"])

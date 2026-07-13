@@ -2,12 +2,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sinavokuma_shared import User, UserRole
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.deps import CurrentUser, DbSession, require_role
 from app.core.security import create_access_token, hash_password, verify_password
-from app.models import User, UserRole
 from app.schemas.auth import Token, UserCreate, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])

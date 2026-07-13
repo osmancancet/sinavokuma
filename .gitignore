@@ -20,9 +20,14 @@ out/
 dist/
 *.tsbuildinfo
 
-# AI model önbelleği (GB'larca — repoda yeri yok)
+# AI model önbelleği (GB'larca — repoda yeri yok).
+# DİKKAT: burayı `models/` yazmayın — o kural `app/models/` gibi kaynak kod
+# klasörlerini de sessizce yok sayar ve şema kodu commit edilmez.
 .cache/
-models/
+/model-cache/
 
 # İşletim sistemi
 .DS_Store
+
+# Test icin uretilen sentetik kagitlar
+services/inference/scripts/test_kagit.png

@@ -16,7 +16,11 @@ dependencies = [
     "python-multipart>=0.0.12",
     "minio>=7.2",
     "aio-pika>=9.5",
+    "sinavokuma-shared",
 ]
+
+[tool.uv.sources]
+sinavokuma-shared = { path = "../../packages/shared", editable = true }
 
 [dependency-groups]
 dev = [

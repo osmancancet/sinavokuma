@@ -8,11 +8,11 @@ Bu script o kilidi açar.
 
 import asyncio
 
+from sinavokuma_shared import Course, Exam, MudekOutcome, Question, User, UserRole
 from sqlalchemy import select
 
 from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
-from app.models import Course, Exam, MudekOutcome, Question, User, UserRole
 
 USERS = [
     ("admin@uni.edu.tr", "Sistem Yöneticisi", "admin1234", UserRole.ADMIN),

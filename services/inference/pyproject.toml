@@ -1,0 +1,39 @@
+[project]
+name = "sinavokuma-inference"
+version = "0.1.0"
+description = "El yazısı okuma (HTR) + rubrik puanlama worker'ı"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "aio-pika>=9.5",
+    "minio>=7.2",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30",
+    "pillow>=11.0",
+    "langchain-core>=0.3",
+    "sinavokuma-shared",
+]
+
+[project.optional-dependencies]
+# Apple Silicon (geliştirme). Metal üzerinden Qwen2.5-VL çalıştırır.
+# Docker'a girmez — Metal, macOS'ta Linux konteynerlerine geçmez.
+mlx = ["mlx-vlm>=0.1.12"]
+# Prod GPU sunucusu (CUDA). Bu Mac'te kurulmaz.
+cuda = ["torch>=2.5", "transformers>=4.49", "accelerate>=1.0", "qwen-vl-utils>=0.0.8"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.8"]
+
+[tool.uv.sources]
+sinavokuma-shared = { path = "../../packages/shared", editable = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

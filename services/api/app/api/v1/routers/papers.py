@@ -7,7 +7,7 @@ Akış (mobil uygulamanın izlediği yol):
   2. PUT <upload_url>                    -> istemci dosyayı DOĞRUDAN MinIO'ya yükler
                                             (API'den geçmez)
   3. POST /papers/{id}/confirm           -> yükleme bitti; kağıt işleme kuyruğuna girer
-                                            (GÖREV 4 / FAZ 2 — henüz yazılmadı)
+                                            (GÖREV 4)
 
 Kaydı 1. adımda açıyoruz çünkü aksi halde MinIO'ya yüklenmiş ama veritabanında
 karşılığı olmayan "yetim" dosyalar birikir.
@@ -16,14 +16,14 @@ karşılığı olmayan "yetim" dosyalar birikir.
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sinavokuma_shared import Exam, ExamStatus, PaperStatus, StudentPaper, UserRole
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
-from app.core.deps import DbSession, get_readable_exam, require_role
-from app.models import Exam, PaperStatus, StudentPaper, UserRole
+from app.core.deps import CurrentUser, DbSession, get_readable_exam, require_role
 from app.schemas.paper import PaperRead, UploadUrlRequest, UploadUrlResponse
-from app.services import storage
+from app.services import queue, storage
 
 router = APIRouter(tags=["papers"])
 
@@ -70,6 +70,44 @@ async def create_upload_url(
         upload_url=storage.presigned_put_url(object_key),
         expires_in_seconds=settings.presigned_url_ttl_seconds,
     )
+
+
+@router.post(
+    "/papers/{paper_id}/confirm",
+    response_model=PaperRead,
+    summary="Yükleme tamamlandı — kağıdı AI işleme kuyruğuna gönder (GÖREV 4)",
+)
+async def confirm_upload(paper_id: int, user: CurrentUser, db: DbSession, _: WriteAccess):
+    paper = await db.get(StudentPaper, paper_id)
+    if paper is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kağıt bulunamadı.")
+
+    # Kağıdın üstündeki sınav/ders bu kullanıcının mı? (satır bazlı erişim)
+    await get_readable_exam(paper.exam_id, user, db)
+
+    # Dosya gerçekten MinIO'da mı? İstemci upload-url alıp PUT'u atlamış olabilir;
+    # doğrulamazsak worker olmayan bir dosyayı indirmeye çalışıp hata döngüsüne girer.
+    if not storage.object_exists(paper.image_url):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Dosya depoda bulunamadı. Önce presigned URL'e yükleme yapın.",
+        )
+
+    # Aynı kağıt iki kez onaylanırsa iki kez işlenir ve GPU boşa yanar.
+    if paper.status != PaperStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Kağıt zaten işlenmiş (durum: {paper.status.value}).",
+        )
+
+    exam = await db.get(Exam, paper.exam_id)
+    if exam is not None and exam.status == ExamStatus.DRAFT:
+        exam.status = ExamStatus.PROCESSING
+
+    await db.commit()
+    await queue.publish_paper_for_processing(paper.id, paper.exam_id, paper.image_url)
+    await db.refresh(paper)
+    return paper
 
 
 @router.get("/exams/{exam_id}/papers", response_model=list[PaperRead])

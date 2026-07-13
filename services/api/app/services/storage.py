@@ -9,6 +9,7 @@ bir izin biletini üretir.
 from datetime import timedelta
 
 from minio import Minio
+from minio.error import S3Error
 
 from app.core.config import settings
 
@@ -49,6 +50,17 @@ def presigned_put_url(object_key: str) -> str:
         object_key,
         expires=timedelta(seconds=settings.presigned_url_ttl_seconds),
     )
+
+
+def object_exists(object_key: str) -> bool:
+    """Nesne depoda gerçekten var mı? /confirm bunu doğrulamadan kuyruğa mesaj basmaz."""
+    try:
+        _client.stat_object(settings.minio_bucket, object_key)
+    except S3Error as exc:
+        if exc.code in ("NoSuchKey", "NoSuchObject"):
+            return False
+        raise
+    return True
 
 
 def presigned_get_url(object_key: str) -> str:

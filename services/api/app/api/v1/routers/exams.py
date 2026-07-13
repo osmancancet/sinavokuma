@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
+from sinavokuma_shared import Exam, Question, UserRole
 from sqlalchemy import select
 
 from app.core.deps import Course, DbSession, get_owned_course, get_readable_exam, require_role
-from app.models import Exam, Question, UserRole
 from app.schemas.course import ExamCreate, ExamRead, QuestionCreate, QuestionRead
 
 router = APIRouter(tags=["exams"])

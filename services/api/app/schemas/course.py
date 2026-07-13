@@ -2,8 +2,7 @@
 from datetime import date as Date
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from app.models import ExamStatus
+from sinavokuma_shared import ExamStatus
 
 
 class CourseCreate(BaseModel):

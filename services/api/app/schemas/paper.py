@@ -1,6 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-
-from app.models import PaperStatus
+from sinavokuma_shared import PaperStatus
 
 
 class UploadUrlRequest(BaseModel):

@@ -1,6 +1,5 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
-from app.models import UserRole
+from sinavokuma_shared import UserRole
 
 
 class UserCreate(BaseModel):

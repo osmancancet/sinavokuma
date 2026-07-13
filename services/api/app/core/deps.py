@@ -9,11 +9,11 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sinavokuma_shared import Course, User, UserRole
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_access_token
 from app.db.session import get_db
-from app.models import Course, User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -90,7 +90,7 @@ async def get_owned_course(course_id: int, user: CurrentUser, db: DbSession) -> 
 
 async def get_readable_exam(exam_id: int, user: CurrentUser, db: DbSession):
     """Sınavı getirir ve üstündeki dersin sahipliğini doğrular."""
-    from app.models import Exam
+    from sinavokuma_shared import Exam
 
     exam = await db.get(Exam, exam_id)
     if exam is None:
