@@ -1,0 +1,80 @@
+name: sinavokuma
+
+# Geliştirme altyapısı: PostgreSQL + RabbitMQ + MinIO.
+#
+# Core API ve Inference servisi bilerek burada DEĞİL. Inference servisi Apple
+# Silicon'da MLX/Metal ile çalışır; Metal, macOS üzerindeki Linux konteynerlerine
+# geçmez. İkisini de yerel (uv) çalıştırıyoruz. Prod dağıtımı için ayrı
+# Dockerfile'lar yazılacak (CUDA tabanlı inference imajı dahil).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sinavokuma-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sinavokuma}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sinavokuma}
+      POSTGRES_DB: ${POSTGRES_DB:-sinavokuma}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sinavokuma}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: sinavokuma-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-sinavokuma}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-sinavokuma}
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Yönetim paneli
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: sinavokuma-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-sinavokuma}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-sinavokuma123}
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # Web konsolu
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Sınav kağıtları bucket'ını ilk açılışta oluşturur, sonra çıkar.
+  minio-init:
+    image: minio/mc:latest
+    container_name: sinavokuma-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY:-sinavokuma} ${MINIO_SECRET_KEY:-sinavokuma123};
+      mc mb --ignore-existing local/${MINIO_BUCKET:-sinav-kagitlari};
+      echo 'MinIO bucket hazir: ${MINIO_BUCKET:-sinav-kagitlari}';
+      "
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+  minio-data:

@@ -1,0 +1,28 @@
+# Ortam değişkenleri — sırlar asla commit edilmez (SRS §5)
+.env
+.env.local
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# AI model önbelleği (GB'larca — repoda yeri yok)
+.cache/
+models/
+
+# İşletim sistemi
+.DS_Store
