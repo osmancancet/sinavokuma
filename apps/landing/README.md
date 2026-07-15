@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rubrik — Tanıtım Sitesi
 
-## Getting Started
+Yapay zeka destekli sınav okuma platformunun herkese açık tanıtım sayfası.
+Next.js 16 (App Router) · statik export · öğrenci verisi içermez.
 
-First, run the development server:
-
+## Yerel çalıştırma
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Vercel'e deploy
+Bu klasör (`apps/landing`) bağımsız bir Next.js projesidir. Monorepo içinde
+olduğu için Vercel'de **Root Directory** ayarını `apps/landing` yapın:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. vercel.com → Add New → Project → repoyu içe aktar
+2. Root Directory: `apps/landing`
+3. Framework: Next.js (otomatik algılanır)
+4. Deploy
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Özel alan adı: Vercel → Project → Settings → Domains → alan adınızı ekleyin,
+DNS'te verilen kaydı (A veya CNAME) tanımlayın.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Not: Bu site KVKK açısından güvenlidir çünkü hiçbir öğrenci verisi işlemez.
+Değerlendirme paneli (öğrenci kağıtları) kurumun KENDİ sunucusunda çalışır,
+Vercel'de değil.

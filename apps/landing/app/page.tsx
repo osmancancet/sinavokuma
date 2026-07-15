@@ -1,33 +1,35 @@
 import Grader from "./Grader";
 
+// Program Öğrenme Çıktıları (PÇ) — MÜDEK/MEDEK bu seviyeyi denetler.
+// Hangi PÇ'nin göründüğü ve puanı, sorulara bağlı ders çıktılarından (DÇ) türer.
 const OUTCOMES = [
   {
-    code: "Ç1",
-    name: "Karmaşık mühendislik problemlerini çözme becerisi",
-    questions: "S1, S4",
-    students: 312,
-    earned: "4.867",
-    total: "6.240",
+    code: "PÇ1",
+    name: "Temel programlama kavramlarını uygulama",
+    from: "DÇ1, DÇ2",
+    questions: "S1, S2",
+    earned: "138",
+    total: "300",
     pct: 78,
     attained: true,
   },
   {
-    code: "Ç2",
-    name: "Algoritma tasarımı ve uygulama",
-    questions: "S2",
-    students: 312,
-    earned: "2.652",
-    total: "3.120",
+    code: "PÇ3",
+    name: "Algoritma geliştirme ve problem çözme",
+    from: "DÇ2, DÇ3",
+    questions: "S1, S2",
+    earned: "255",
+    total: "300",
     pct: 85,
     attained: true,
   },
   {
-    code: "Ç3",
-    name: "Veri yapılarını seçme ve kullanma",
+    code: "PÇ4",
+    name: "Bilgi teknolojilerini etkin kullanma",
+    from: "DÇ4",
     questions: "S3, S5",
-    students: 312,
-    earned: "2.049",
-    total: "4.992",
+    earned: "62",
+    total: "150",
     pct: 41,
     attained: false,
   },
@@ -175,11 +177,22 @@ export default function Home() {
               <p className="eyebrow">Akreditasyon</p>
               <h2>Kazanım kanıt dosyası, dönem sonunda kendiliğinden hazır.</h2>
               <p>
-                Her soruyu bir program çıktısına (kazanıma) bağlarsınız. Sistem, o
-                çıktıya bağlı tüm soruların <b>onaylanmış</b> puanlarından sınıfın edinim
-                oranını hesaplar ve Excel olarak dışa aktarır. Denetçi geldiğinde
-                tabloları elle doldurmazsınız — dosya zaten derlenmiş durumda.
+                Her soruyu ders öğrenme çıktılarına (DÇ) ağırlıklarıyla bağlarsınız; DÇ&rsquo;ler
+                de program çıktılarına (PÇ) beslenir. Sistem, <b>onaylanmış</b> notlardan bu zinciri
+                izleyerek her PÇ&rsquo;nin sınıf edinim oranını hesaplar ve Excel olarak verir.
+                Denetçi geldiğinde tabloları elle doldurmazsınız.
               </p>
+
+              <div className="chain">
+                <span className="chain-node">Soru</span>
+                <span className="chain-arrow">
+                  <small>ağırlık %</small>→
+                </span>
+                <span className="chain-node">DÇ</span>
+                <span className="chain-arrow">→</span>
+                <span className="chain-node accent">PÇ</span>
+                <span className="chain-tag">MÜDEK / MEDEK burayı denetler</span>
+              </div>
 
               <div className="accred">
                 <span className="acc">
@@ -197,18 +210,17 @@ export default function Home() {
               </div>
 
               <ul>
-                <li>Soru&ndash;kazanım eşleştirmesi rubriği hazırlarken, bir kez yapılır.</li>
                 <li>
-                  Edinim oranı yalnızca <b>onaylanmış</b> notlardan hesaplanır. Yapay
-                  zekânın önerdiği ama onaylanmamış puan rapora girmez.
+                  Hangi PÇ&rsquo;nin ve hangi soruların rapora gireceği sabit değildir; sorulara
+                  bağladığınız DÇ&rsquo;lere göre kendiliğinden belirlenir.
                 </li>
                 <li>
-                  Excel&rsquo;in ikinci sayfası &ldquo;bu sayı nasıl çıktı&rdquo;
-                  sorusunu cevaplar — denetçinin ilk sorduğu soru budur.
+                  Edinim oranı yalnızca <b>onaylanmış</b> notlardan ve sınava <b>giren</b>
+                  öğrencilerden hesaplanır. Yapay zekânın önerisi rapora girmez.
                 </li>
                 <li>
-                  Hiçbir kazanıma bağlanmamış sorular sessizce yutulmaz; raporda uyarı
-                  olarak listelenir.
+                  Not listesi OBS&rsquo;nin &ldquo;Listeyi Excel&rsquo;e Aktar&rdquo; biçiminde
+                  çıkar &mdash; indirir, OBS&rsquo;ye yüklersiniz. 300 satırı elle girmezsiniz.
                 </li>
               </ul>
             </div>
@@ -241,7 +253,7 @@ export default function Home() {
                     <span className="desc">
                       {o.name}
                       <small>
-                        {o.questions} · {o.students} kağıt
+                        {o.from} · {o.questions}
                       </small>
                     </span>
                     <span className="num">{o.earned}</span>
@@ -254,7 +266,7 @@ export default function Home() {
               </div>
 
               <div className="panel-foot">
-                Ç3&rsquo;te sınıfın yarısından fazlası zorlanmış. Bu, gelecek dönem
+                PÇ4&rsquo;te sınıfın yarısından fazlası zorlanmış. Bu, gelecek dönem
                 müfredatta neyin değişmesi gerektiğini söyleyen bir sinyal — denetim
                 için doldurulan bir kutu değil.
               </div>

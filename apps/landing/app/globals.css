@@ -291,6 +291,24 @@ section { padding-block: 5.5rem; }
 .split li { display: flex; gap: .65rem; font-size: .93rem; align-items: baseline; }
 .split li::before { content: "—"; color: var(--ink-3); flex: none; }
 
+/* soru → DÇ → PÇ zinciri */
+.chain {
+  display: flex; align-items: center; flex-wrap: wrap; gap: .5rem;
+  margin-top: 1.5rem; font-size: .82rem;
+}
+.chain-node {
+  font-family: var(--mono); font-weight: 650;
+  padding: .3rem .6rem; border-radius: var(--radius);
+  border: 1px solid var(--hairline); background: var(--surface); color: var(--ink);
+}
+.chain-node.accent { border-color: var(--red); color: var(--red); }
+.chain-arrow { color: var(--ink-3); display: inline-flex; align-items: center; gap: .2rem; }
+.chain-arrow small { font-size: .62rem; }
+.chain-tag {
+  font-size: .74rem; color: var(--ink-3); margin-left: .3rem;
+  padding-left: .6rem; border-left: 1px solid var(--hairline);
+}
+
 /* akreditasyon kurumları */
 .accred { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
 .acc {
