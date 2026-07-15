@@ -31,3 +31,4 @@ dist/
 
 # Test icin uretilen sentetik kagitlar
 services/inference/scripts/test_kagit.png
+

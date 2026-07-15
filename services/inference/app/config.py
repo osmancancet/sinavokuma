@@ -21,13 +21,21 @@ class Settings(BaseSettings):
     minio_bucket: str = "sinav-kagitlari"
     minio_secure: bool = False
 
+    # ── HTR (el yazısı okuma) ──
     # mock | qwen_mlx | qwen_cuda
     htr_engine: str = "mock"
     qwen_mlx_model: str = "mlx-community/Qwen2.5-VL-3B-Instruct-4bit"
     qwen_cuda_model: str = "Qwen/Qwen2.5-VL-7B-Instruct"
-
     htr_max_tokens: int = 1024
-    grading_max_tokens: int = 2048
+
+    # ── Puanlama (rubrik akıl yürütmesi) — HTR'dan AYRI model ──
+    # SRS §1.4 zaten ayrı öngörüyordu. Ölçüm doğruladı: 3B-VL okumada iyi, akıl
+    # yürütmede yetersiz (gerekçe olarak tekrar eden dejenere metin üretiyor).
+    # mock | qwen_text_mlx | qwen_cuda
+    grading_engine: str = "mock"
+    grading_mlx_model: str = "mlx-community/Qwen2.5-7B-Instruct-4bit"
+    grading_cuda_model: str = "Qwen/Qwen2.5-14B-Instruct"
+    grading_max_tokens: int = 2560
 
     # SRS §1.3: GPU'yu boğmamak için aynı anda tek kağıt işlenir.
     prefetch_count: int = 1

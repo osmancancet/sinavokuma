@@ -104,11 +104,17 @@ async def process_paper(db: AsyncSession, paper_id: int, object_key: str) -> Non
         logger.info("Soru %s puanlanıyor...", question.question_number)
         raw = await asyncio.to_thread(llm.generate, prompt)
 
+        rubric = question.rubric_criteria or []
         try:
-            result = chain.parse_result(raw)
-        except Exception as exc:
+            result = chain.parse_result(raw, rubric)
+        except chain.GradingParseError as exc:
+            # Kritik: burada "0 puan" varsaymıyoruz. Model çıktısı okunamadıysa bu
+            # ÖĞRENCİNİN hatası değil, SİSTEMİN hatasıdır. Kağıdı FAILED işaretleyip
+            # insana gönderiyoruz. Sessizce sıfır vermek en kötü senaryo olurdu.
+            logger.error("Puanlama çıktısı okunamadı. Ham çıktı:\n%s", raw[:800])
             raise PermanentError(
-                f"Model çıktısı beklenen şemaya uymuyor (soru {question.question_number}): {exc}"
+                f"Soru {question.question_number}: model çıktısı okunamadı ({exc}). "
+                "Kağıt insan incelemesine gönderildi."
             ) from exc
 
         result = chain.clamp_to_rubric(result, float(question.max_score))

@@ -1,8 +1,8 @@
-"""SRS 2 core schema
+"""OBS akreditasyon modeli
 
-Revision ID: cb9c2e327185
+Revision ID: 627e38469fae
 Revises: 
-Create Date: 2026-07-13 03:39:17.996688
+Create Date: 2026-07-16 02:35:44.426277
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'cb9c2e327185'
+revision: str = '627e38469fae'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -55,6 +55,30 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_courses_code'), 'courses', ['code'], unique=False)
     op.create_index(op.f('ix_courses_teacher_id'), 'courses', ['teacher_id'], unique=False)
+    op.create_table('program_outcomes',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('department_id', sa.Integer(), nullable=False),
+    sa.Column('code', sa.String(length=16), nullable=False),
+    sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['department_id'], ['departments.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('department_id', 'code', name='uq_program_outcome_dept_code')
+    )
+    op.create_index(op.f('ix_program_outcomes_department_id'), 'program_outcomes', ['department_id'], unique=False)
+    op.create_table('course_outcomes',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('course_id', sa.Integer(), nullable=False),
+    sa.Column('code', sa.String(length=16), nullable=False),
+    sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['course_id'], ['courses.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('course_id', 'code', name='uq_course_outcome_code')
+    )
+    op.create_index(op.f('ix_course_outcomes_course_id'), 'course_outcomes', ['course_id'], unique=False)
     op.create_table('exams',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('course_id', sa.Integer(), nullable=False),
@@ -68,40 +92,34 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_exams_course_id'), 'exams', ['course_id'], unique=False)
-    op.create_table('mudek_outcomes',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('course_id', sa.Integer(), nullable=False),
-    sa.Column('outcome_code', sa.String(length=16), nullable=False),
-    sa.Column('description', sa.Text(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['course_id'], ['courses.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('course_id', 'outcome_code', name='uq_mudek_course_code')
+    op.create_table('course_outcome_program_outcomes',
+    sa.Column('course_outcome_id', sa.Integer(), nullable=False),
+    sa.Column('program_outcome_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['course_outcome_id'], ['course_outcomes.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['program_outcome_id'], ['program_outcomes.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('course_outcome_id', 'program_outcome_id')
     )
-    op.create_index(op.f('ix_mudek_outcomes_course_id'), 'mudek_outcomes', ['course_id'], unique=False)
     op.create_table('questions',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('exam_id', sa.Integer(), nullable=False),
     sa.Column('question_number', sa.Integer(), nullable=False),
     sa.Column('max_score', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('mudek_outcome_id', sa.Integer(), nullable=True),
+    sa.Column('prompt', sa.Text(), nullable=True),
     sa.Column('expected_answer', sa.Text(), nullable=True),
     sa.Column('rubric_criteria', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['exam_id'], ['exams.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['mudek_outcome_id'], ['mudek_outcomes.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('exam_id', 'question_number', name='uq_question_exam_number')
     )
     op.create_index(op.f('ix_questions_exam_id'), 'questions', ['exam_id'], unique=False)
-    op.create_index(op.f('ix_questions_mudek_outcome_id'), 'questions', ['mudek_outcome_id'], unique=False)
     op.create_table('student_papers',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('exam_id', sa.Integer(), nullable=False),
     sa.Column('student_no', sa.String(length=32), nullable=False),
-    sa.Column('image_url', sa.String(length=512), nullable=False),
+    sa.Column('attended', sa.Boolean(), nullable=False),
+    sa.Column('image_url', sa.String(length=512), nullable=True),
     sa.Column('status', sa.Enum('PENDING', 'AI_SCORED', 'APPROVED', 'FAILED', name='paper_status'), nullable=False),
     sa.Column('error_message', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -131,25 +149,36 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_paper_scores_question_id'), 'paper_scores', ['question_id'], unique=False)
     op.create_index(op.f('ix_paper_scores_student_paper_id'), 'paper_scores', ['student_paper_id'], unique=False)
+    op.create_table('question_outcomes',
+    sa.Column('question_id', sa.Integer(), nullable=False),
+    sa.Column('course_outcome_id', sa.Integer(), nullable=False),
+    sa.Column('weight_pct', sa.Numeric(precision=5, scale=2), nullable=False),
+    sa.ForeignKeyConstraint(['course_outcome_id'], ['course_outcomes.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['question_id'], ['questions.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('question_id', 'course_outcome_id')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('question_outcomes')
     op.drop_index(op.f('ix_paper_scores_student_paper_id'), table_name='paper_scores')
     op.drop_index(op.f('ix_paper_scores_question_id'), table_name='paper_scores')
     op.drop_table('paper_scores')
     op.drop_index(op.f('ix_student_papers_student_no'), table_name='student_papers')
     op.drop_index(op.f('ix_student_papers_exam_id'), table_name='student_papers')
     op.drop_table('student_papers')
-    op.drop_index(op.f('ix_questions_mudek_outcome_id'), table_name='questions')
     op.drop_index(op.f('ix_questions_exam_id'), table_name='questions')
     op.drop_table('questions')
-    op.drop_index(op.f('ix_mudek_outcomes_course_id'), table_name='mudek_outcomes')
-    op.drop_table('mudek_outcomes')
+    op.drop_table('course_outcome_program_outcomes')
     op.drop_index(op.f('ix_exams_course_id'), table_name='exams')
     op.drop_table('exams')
+    op.drop_index(op.f('ix_course_outcomes_course_id'), table_name='course_outcomes')
+    op.drop_table('course_outcomes')
+    op.drop_index(op.f('ix_program_outcomes_department_id'), table_name='program_outcomes')
+    op.drop_table('program_outcomes')
     op.drop_index(op.f('ix_courses_teacher_id'), table_name='courses')
     op.drop_index(op.f('ix_courses_code'), table_name='courses')
     op.drop_table('courses')

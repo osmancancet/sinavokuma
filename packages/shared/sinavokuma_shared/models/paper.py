@@ -2,15 +2,15 @@ from sqlalchemy import ForeignKey, Numeric, String, Text, UniqueConstraint
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from sinavokuma_shared.models.base import Base, TimestampMixin
 from sinavokuma_shared.enums import PaperStatus
+from sinavokuma_shared.models.base import Base, TimestampMixin
 
 
 class StudentPaper(Base, TimestampMixin):
     __tablename__ = "student_papers"
     __table_args__ = (
         # Bir sınavda bir öğrencinin tek kağıdı olur. Mobil uygulamanın çevrimdışı
-        # senkronizasyonu aynı kağıdı iki kez göndermeye çalışırsa DB seviyesinde durur.
+        # senkronizasyonu aynı kağıdı iki kez göndermeye çalışırsa DB'de durur.
         UniqueConstraint("exam_id", "student_no", name="uq_paper_exam_student"),
     )
 
@@ -18,11 +18,20 @@ class StudentPaper(Base, TimestampMixin):
     exam_id: Mapped[int] = mapped_column(
         ForeignKey("exams.id", ondelete="CASCADE"), index=True, nullable=False
     )
+    # Öğrenci numarası tek tanımlayıcıdır. Ad/soyad BİLEREK tutulmuyor: kağıtta
+    # sadece numara yazılı, ad-soyad eşleştirmesi OBS'de zaten var. İsim saklamak
+    # gereksiz hassas veri biriktirmek olurdu (KVKK — veri minimizasyonu).
     student_no: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
 
-    # MinIO'daki nesne anahtarı (örn: "exams/12/papers/20210101.jpg"). Tam URL değil —
+    # OBS: "Girme Durum" (Girdi / Girmedi).
+    # Sınava girmeyen öğrenci kazanım hesabının PAYDASINA girmez — girerse sınıfın
+    # başarı oranı yapay olarak düşer ve akreditasyon raporu yanlış çıkar.
+    attended: Mapped[bool] = mapped_column(nullable=False, default=True)
+
+    # MinIO nesne anahtarı (örn: "exams/12/papers/20210101.jpg"). Tam URL değil —
     # URL'ler presigned olarak anlık üretilir, kalıcı saklanmaz.
-    image_url: Mapped[str] = mapped_column(String(512), nullable=False)
+    # Sınava girmeyen öğrencinin kağıdı yoktur; bu yüzden boş olabilir.
+    image_url: Mapped[str | None] = mapped_column(String(512))
 
     status: Mapped[PaperStatus] = mapped_column(
         SAEnum(PaperStatus, name="paper_status"), nullable=False, default=PaperStatus.PENDING
@@ -38,10 +47,13 @@ class StudentPaper(Base, TimestampMixin):
 class PaperScore(Base, TimestampMixin):
     """Bir kağıdın tek bir sorusuna verilen not.
 
-    SRS §3.2 (Human-in-the-Loop): `ai_score` AI'ın önerisidir ve ASLA değiştirilmez —
-    denetim izi olarak kalır. Akademisyenin onayladığı/düzelttiği not `final_score`'a
-    yazılır. İkisini ayrı tutmak, MÜDEK denetçisine "AI ne dedi, insan ne karar verdi"
-    sorusunu cevaplayabilmemizi sağlar.
+    SRS §3.2 (Human-in-the-Loop): `ai_score` yapay zekânın ÖNERİSİDİR ve asla
+    değiştirilmez — denetim izi olarak kalır. Akademisyenin onayladığı/düzelttiği
+    not `final_score`'a yazılır.
+
+    İkisini ayrı tutmak, denetçinin "makine ne dedi, insan ne karar verdi" sorusunu
+    her kağıt için cevaplayabilmesini sağlar. Akreditasyon raporuna YALNIZCA
+    `final_score` girer.
     """
 
     __tablename__ = "paper_scores"
@@ -59,7 +71,7 @@ class PaperScore(Base, TimestampMixin):
 
     ai_raw_text: Mapped[str | None] = mapped_column(Text)  # HTR'ın okuduğu ham metin
     ai_score: Mapped[float | None] = mapped_column(Numeric(6, 2))
-    ai_reasoning: Mapped[str | None] = mapped_column(Text)  # neden bu notu verdi (CoT çıktısı)
+    ai_reasoning: Mapped[str | None] = mapped_column(Text)  # neden bu puanı verdi (CoT)
 
     final_score: Mapped[float | None] = mapped_column(Numeric(6, 2))
     reviewed_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))

@@ -18,8 +18,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 HANDWRITING_FONT = "/System/Library/Fonts/Supplemental/Bradley Hand Bold.ttf"
 
-# Öğrencinin kağıda yazdığı varsayılan cevap. HTR'ın bunu ne kadar doğru
-# okuduğunu ölçmek için "ground truth" olarak saklıyoruz.
+STUDENT_NO = "20210777"
+
+# Öğrencinin kağıda yazdığı cevap.
 GROUND_TRUTH = """Soru 1:
 
 int toplam = 0;
@@ -27,6 +28,11 @@ for (int i = 1; i <= n; i++) {
     toplam = toplam + i;
 }
 printf("%d", toplam);"""
+
+# Kağıtta yazan HER ŞEY — başlık dahil. Model kağıdın tamamını okuyor, dolayısıyla
+# doğruluğu buna karşı ölçmek gerekir. İlk ölçümde başlığı ground truth'a koymamak
+# CER'i %123 gösterip modeli haksız yere başarısız gibi göstermişti.
+GROUND_TRUTH_FULL = f"Ogrenci No: {STUDENT_NO}\n\n{GROUND_TRUTH}"
 
 
 def make_paper(out_path: Path, seed: int = 42) -> None:
@@ -44,7 +50,7 @@ def make_paper(out_path: Path, seed: int = 42) -> None:
     header_font = ImageFont.truetype(HANDWRITING_FONT, 26)
     body_font = ImageFont.truetype(HANDWRITING_FONT, 30)
 
-    draw.text((60, 30), "Ogrenci No: 20210777", font=header_font, fill=(40, 40, 90))
+    draw.text((60, 30), f"Ogrenci No: {STUDENT_NO}", font=header_font, fill=(40, 40, 90))
 
     y = 100
     for line in GROUND_TRUTH.split("\n"):

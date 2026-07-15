@@ -1,11 +1,14 @@
-from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from sinavokuma_shared.models.base import Base, TimestampMixin
 
 
 class Department(Base, TimestampMixin):
-    """SRS'te tablo olarak tanımlanmamış ama `courses.department_id` ona işaret ediyor."""
+    """Bölüm / program. Program Öğrenme Çıktıları (PÇ) buraya aittir — derse değil.
+
+    Aynı PÇ birden çok dersten beslenir; MÜDEK/MEDEK bu seviyeyi denetler.
+    """
 
     __tablename__ = "departments"
 
@@ -14,13 +17,16 @@ class Department(Base, TimestampMixin):
     faculty: Mapped[str | None] = mapped_column(String(255))
 
     courses: Mapped[list["Course"]] = relationship(back_populates="department")
+    program_outcomes: Mapped[list["ProgramOutcome"]] = relationship(  # noqa: F821
+        back_populates="department", cascade="all, delete-orphan"
+    )
 
 
 class Course(Base, TimestampMixin):
     __tablename__ = "courses"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    code: Mapped[str] = mapped_column(String(32), index=True, nullable=False)  # örn: BMG101
+    code: Mapped[str] = mapped_column(String(32), index=True, nullable=False)  # örn: BVA1108
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     department_id: Mapped[int | None] = mapped_column(
         ForeignKey("departments.id", ondelete="SET NULL")
@@ -34,28 +40,6 @@ class Course(Base, TimestampMixin):
     exams: Mapped[list["Exam"]] = relationship(  # noqa: F821
         back_populates="course", cascade="all, delete-orphan"
     )
-    mudek_outcomes: Mapped[list["MudekOutcome"]] = relationship(
+    course_outcomes: Mapped[list["CourseOutcome"]] = relationship(  # noqa: F821
         back_populates="course", cascade="all, delete-orphan"
-    )
-
-
-class MudekOutcome(Base, TimestampMixin):
-    """SRS §4: MÜDEK ders kazanımları. Akreditasyon kanıt dosyasının temeli."""
-
-    __tablename__ = "mudek_outcomes"
-    __table_args__ = (
-        # Aynı derste aynı çıktı kodu iki kez tanımlanamaz (Ç1, Ç2, ...).
-        UniqueConstraint("course_id", "outcome_code", name="uq_mudek_course_code"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    course_id: Mapped[int] = mapped_column(
-        ForeignKey("courses.id", ondelete="CASCADE"), index=True, nullable=False
-    )
-    outcome_code: Mapped[str] = mapped_column(String(16), nullable=False)  # örn: Ç1
-    description: Mapped[str] = mapped_column(Text, nullable=False)
-
-    course: Mapped["Course"] = relationship(back_populates="mudek_outcomes")
-    questions: Mapped[list["Question"]] = relationship(  # noqa: F821
-        back_populates="mudek_outcome"
     )

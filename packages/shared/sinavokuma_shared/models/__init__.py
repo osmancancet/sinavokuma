@@ -1,24 +1,34 @@
-"""SRS §2 — Core Schema.
+"""Veritabanı şeması — gerçek OBS akreditasyon modeline göre.
 
-Tablolar SRS'teki tanımı birebir izler. Tek ekleme: `departments`. SRS
-`courses.department_id` alanını istiyor ama tabloyu tanımlamamış; foreign key'in
-bir hedefi olması için ekledik.
+Çıktı zinciri iki katmanlı ve ağırlıklıdır:
+
+    Soru ──(ağırlık %)──> DÇ (Ders Öğrenme Çıktısı) ──> PÇ (Program Öğrenme Çıktısı)
+                                                          ↑ MÜDEK/MEDEK burayı denetler
 """
 
 from sinavokuma_shared.models.base import Base, TimestampMixin
-from sinavokuma_shared.models.course import Course, Department, MudekOutcome
+from sinavokuma_shared.models.course import Course, Department
 from sinavokuma_shared.models.exam import Exam, Question
+from sinavokuma_shared.models.outcome import (
+    CourseOutcome,
+    CourseOutcomeProgramOutcome,
+    ProgramOutcome,
+    QuestionOutcome,
+)
 from sinavokuma_shared.models.paper import PaperScore, StudentPaper
 from sinavokuma_shared.models.user import User
 
 __all__ = [
     "Base",
     "Course",
+    "CourseOutcome",
+    "CourseOutcomeProgramOutcome",
     "Department",
     "Exam",
-    "MudekOutcome",
     "PaperScore",
+    "ProgramOutcome",
     "Question",
+    "QuestionOutcome",
     "StudentPaper",
     "TimestampMixin",
     "User",

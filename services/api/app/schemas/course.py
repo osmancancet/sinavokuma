@@ -5,9 +5,22 @@ from pydantic import BaseModel, ConfigDict, Field
 from sinavokuma_shared import ExamStatus
 
 
+class DepartmentCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=255, examples=["Bilgisayar Programcılığı"])
+    faculty: str | None = Field(default=None, examples=["Meslek Yüksekokulu"])
+
+
+class DepartmentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    faculty: str | None
+
+
 class CourseCreate(BaseModel):
-    code: str = Field(min_length=1, max_length=32, examples=["BMG101"])
-    name: str = Field(min_length=1, max_length=255)
+    code: str = Field(min_length=1, max_length=32, examples=["BVA1108"])
+    name: str = Field(min_length=1, max_length=255, examples=["Bilgi Teknolojileri"])
     department_id: int | None = None
 
 
@@ -21,24 +34,8 @@ class CourseRead(BaseModel):
     teacher_id: int
 
 
-class MudekOutcomeCreate(BaseModel):
-    outcome_code: str = Field(min_length=1, max_length=16, examples=["Ç1"])
-    description: str = Field(
-        min_length=1, examples=["Karmaşık mühendislik problemlerini çözme becerisi"]
-    )
-
-
-class MudekOutcomeRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    course_id: int
-    outcome_code: str
-    description: str
-
-
 class ExamCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=255, examples=["Vize Sınavı"])
+    title: str = Field(min_length=1, max_length=255, examples=["Bütünleme"])
     date: Date | None = None
     total_score: float = Field(default=100, gt=0, le=1000)
 
@@ -63,8 +60,9 @@ class RubricCriterion(BaseModel):
 
 class QuestionCreate(BaseModel):
     question_number: int = Field(ge=1)
-    max_score: float = Field(gt=0)
-    mudek_outcome_id: int | None = None
+    # OBS: "Soru Puan" = sınav içi etki oranı. Sınavdaki soruların toplamı %100 olmalı.
+    max_score: float = Field(gt=0, le=100, examples=[50])
+    prompt: str | None = Field(default=None, description="Sorunun metni")
     expected_answer: str | None = None
     rubric_criteria: list[RubricCriterion] = Field(default_factory=list)
 
@@ -76,6 +74,6 @@ class QuestionRead(BaseModel):
     exam_id: int
     question_number: int
     max_score: float
-    mudek_outcome_id: int | None
+    prompt: str | None
     expected_answer: str | None
     rubric_criteria: list[dict]
