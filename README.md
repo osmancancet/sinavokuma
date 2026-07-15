@@ -50,3 +50,20 @@ Inference servisi Apple Silicon'da MLX (Metal) ile çalışır; Metal macOS'ta L
 konteynerlerine geçmediği için API ve inference servisleri geliştirmede **Docker
 dışında**, yerel çalışır. Docker yalnızca altyapıyı (PostgreSQL/RabbitMQ/MinIO) taşır.
 Üretim dağıtımı için CUDA tabanlı ayrı bir inference imajı yazılacak.
+
+## AI Motoru — Ölçüm Sonuçları
+
+Modeller ground-truth ile ölçüldü (`services/inference/scripts/bench_*`):
+
+| Görev | Model | Sonuç |
+|---|---|---|
+| El yazısı okuma (HTR) | Qwen2.5-VL-3B (MLX) | %100 karakter doğruluğu · 2.9 sn/kağıt |
+| Rubrik puanlama | Qwen2.5-7B (MLX) | %71 isabet · deterministik · 11 sn/soru |
+
+**Notlar:**
+- Puanlama modeli deterministik — aynı cevap her zaman aynı puanı alır (adil).
+- 14B modeli denendi ve **daha kötü** çıktı (%43, 3x yavaş). Bu görevde büyük
+  model daha iyi değil.
+- AI bir **ön-puan taslağı** üretir; nihai notu her zaman akademisyen onaylar
+  (SRS §3.2 human-in-the-loop). Yapay zekânın önerisi transkripte doğrudan işlenmez.
+- Prod'da daha yüksek isabet için gerçek GPU'da 32B+ non-quantized model önerilir.
