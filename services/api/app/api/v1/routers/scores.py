@@ -45,6 +45,7 @@ class ReviewScreen(BaseModel):
     """
 
     paper_id: int
+    exam_id: int
     student_no: str
     status: PaperStatus
     image_url: str
@@ -73,6 +74,7 @@ async def get_review_screen(paper_id: int, user: CurrentUser, db: DbSession):
 
     return ReviewScreen(
         paper_id=paper.id,
+        exam_id=paper.exam_id,
         student_no=paper.student_no,
         status=paper.status,
         image_url=storage.presigned_get_url(paper.image_url),
@@ -144,6 +146,7 @@ async def approve_paper(
     await db.refresh(paper)
     return ReviewScreen(
         paper_id=paper.id,
+        exam_id=paper.exam_id,
         student_no=paper.student_no,
         status=paper.status,
         image_url=storage.presigned_get_url(paper.image_url),
